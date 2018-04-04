@@ -1,12 +1,15 @@
 package org.incoder.caller.two;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.telephony.TelephonyManager;
-import android.widget.Toast;
+import android.util.Log;
 
+import java.util.Objects;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * PhoneStateReceiver
@@ -16,27 +19,30 @@ import android.widget.Toast;
  */
 public class PhoneStateReceiver extends BroadcastReceiver {
 
-    @SuppressLint("UnsafeProtectedBroadcastReceiver")
     @Override
     public void onReceive(Context context, Intent intent) {
-        try {
-            System.out.println("Receiver start");
-            Toast.makeText(context, " Receiver start ", Toast.LENGTH_SHORT).show();
-
-            String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-            String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-
-            if (state.equals(TelephonyManager.EXTRA_STATE_RINGING)) {
-                Toast.makeText(context, "Ringing State Number is -" + incomingNumber, Toast.LENGTH_SHORT).show();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if (Objects.requireNonNull(intent.getAction()).equals(TelephonyManager.ACTION_PHONE_STATE_CHANGED)) {
+                String phoneNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
+                TelephonyManager telephony = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+                int state = 0;
+                if (telephony != null) {
+                    state = telephony.getCallState();
+                }
+                switch (state) {
+                    case TelephonyManager.CALL_STATE_RINGING:
+                        Log.i(TAG, "[Broadcast:]等待接电话=" + phoneNumber);
+                        break;
+                    case TelephonyManager.CALL_STATE_IDLE:
+                        Log.i(TAG, "[Broadcast:]电话挂断=" + phoneNumber);
+                        break;
+                    case TelephonyManager.CALL_STATE_OFFHOOK:
+                        Log.i(TAG, "[Broadcast:]通话中=" + phoneNumber);
+                        break;
+                    default:
+                        break;
+                }
             }
-            if ((state.equals(TelephonyManager.EXTRA_STATE_OFFHOOK))) {
-                Toast.makeText(context, "Received State", Toast.LENGTH_SHORT).show();
-            }
-            if (state.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
-                Toast.makeText(context, "Idle State", Toast.LENGTH_SHORT).show();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

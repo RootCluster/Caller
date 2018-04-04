@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="org.incoder.caller">
 
+    <!-- 开机广播 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 读取手机状态 -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
         android:allowBackup="true"
@@ -23,15 +25,26 @@
             </intent-filter>
         </activity>
 
+        <!--静态广播注册-->
         <receiver
             android:name=".two.PhoneStateReceiver"
             android:enabled="true"
-            android:process=":PhoneListenService">
-            <intent-filter>
-                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <!-- 开机启动广播 -->
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- 电话状态改变时,发送的广播 (振铃,挂断,接通) -->
                 <action android:name="android.intent.action.PHONE_STATE" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".one.CallerService"
+            android:enabled="true"
+            android:exported="true"
+            android:label="Android来电监听"
+            android:permission="android.permission.READ_PHONE_STATE"
+            android:process=":PhoneListenService" />
 
     </application>
 
